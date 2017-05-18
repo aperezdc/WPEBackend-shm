@@ -30,6 +30,7 @@ set(WPEBACKEND_SHM_SOURCES
     src/renderer-host.cpp
     src/view-backend.cpp
     src/shm.cpp
+    src/ws.cpp
 )
 
 add_library(WPEBackend-shm SHARED ${WPEBACKEND_SHM_SOURCES})
