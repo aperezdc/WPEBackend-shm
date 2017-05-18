@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <cstring>
 #include <glib.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <wayland-egl.h>
 
 namespace {
@@ -126,6 +128,29 @@ private:
     struct wl_egl_window* m_window { nullptr };
 };
 
+
+class OffscreenTarget {
+public:
+    OffscreenTarget() { }
+    ~OffscreenTarget() {
+    if (m_surface)
+        wl_surface_destroy(m_surface);
+    if (m_window)
+        wl_egl_window_destroy(m_window);
+    }
+
+    void initialize(Backend& backend)
+    {
+        m_surface = wl_compositor_create_surface(backend.compositor());
+        m_window = wl_egl_window_create(m_surface, 800, 600);
+    }
+
+    struct wl_egl_window* window() const { return m_window; }
+
+private:
+    struct wl_surface* m_surface { nullptr };
+    struct wl_egl_window* m_window { nullptr };
+};
 }
 
 struct wpe_renderer_backend_egl_interface shm_renderer_backend_egl = {
@@ -181,7 +206,7 @@ struct wpe_renderer_backend_egl_target_interface shm_renderer_backend_egl_target
         fprintf(stderr, "shm_renderer_backend_egl_target::frame_will_render()\n");
     },
     // frame_rendered
-    [](void*)
+    [](void* data)
     {
         fprintf(stderr, "shm_renderer_backend_egl_target::frame_rendered()\n");
     },
@@ -189,11 +214,28 @@ struct wpe_renderer_backend_egl_target_interface shm_renderer_backend_egl_target
 
 struct wpe_renderer_backend_egl_offscreen_target_interface shm_renderer_backend_egl_offscreen_target = {
     // create
-    []() -> void* { return nullptr; },
+    []() -> void*
+    {
+        return new OffscreenTarget();
+    },
     // destroy
-    [](void*) { },
+    [](void* data)
+    {
+        auto* target = static_cast<OffscreenTarget*>(data);
+        delete target;
+    },
     // initialize
-    [](void*, void*) { },
+    [](void* data, void* backend_data)
+    {
+        auto& target = *static_cast<OffscreenTarget*>(data);
+        auto& backend = *static_cast<Backend*>(backend_data);
+        target.initialize(backend);
+    },
     // get_native_window
-    [](void*) -> EGLNativeWindowType { return nullptr; },
+    [](void* data) -> EGLNativeWindowType
+    {
+        auto& target = *static_cast<OffscreenTarget*>(data);
+        return (EGLNativeWindowType)target.window();
+    },
+
 };
