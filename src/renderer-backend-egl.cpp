@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <gio/gio.h>
 #include <glib.h>
 #include <wayland-egl.h>
 
@@ -110,18 +111,36 @@ const struct wl_registry_listener Backend::s_registryListener = {
 
 class Target {
 public:
-    Target() { }
-    ~Target() { }
+    Target(int hostFd)
+    {
+        m_socket = g_socket_new_from_fd(hostFd, nullptr);
+        if (m_socket)
+            g_socket_set_blocking(m_socket, FALSE);
+    }
+
+    ~Target()
+    {
+        if (m_socket)
+            g_object_unref(m_socket);
+    }
 
     void initialize(Backend& backend, uint32_t width, uint32_t height)
     {
         m_surface = wl_compositor_create_surface(backend.compositor());
         m_window = wl_egl_window_create(m_surface, 800, 600);
+        wl_display_roundtrip(backend.display());
+
+        uint32_t message[] = { 0x42, wl_proxy_get_id(reinterpret_cast<struct wl_proxy*>(m_surface)) };
+        if (m_socket)
+            g_socket_send(m_socket, reinterpret_cast<gchar*>(message), 2 * sizeof(uint32_t),
+                nullptr, nullptr);
     }
 
     struct wl_egl_window* window() const { return m_window; }
 
 private:
+    GSocket* m_socket { nullptr };
+
     struct wl_surface* m_surface { nullptr };
     struct wl_egl_window* m_window { nullptr };
 };
@@ -173,9 +192,9 @@ struct wpe_renderer_backend_egl_interface shm_renderer_backend_egl = {
 
 struct wpe_renderer_backend_egl_target_interface shm_renderer_backend_egl_target = {
     // create
-    [](struct wpe_renderer_backend_egl_target*, int) -> void*
+    [](struct wpe_renderer_backend_egl_target*, int host_fd) -> void*
     {
-        return new Target;
+        return new Target(host_fd);
     },
     // destroy
     [](void* data)
