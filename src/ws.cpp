@@ -171,17 +171,6 @@ Instance::Instance()
     g_source_set_priority(m_source, -70);
     g_source_set_can_recurse(m_source, TRUE);
     g_source_attach(m_source, g_main_context_get_thread_default());
-
-    EGLDisplay eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    fprintf(stderr, "eglDisplay %p\n", eglDisplay);
-
-    eglInitialize(eglDisplay, nullptr, nullptr);
-
-    PFNEGLBINDWAYLANDDISPLAYWL bindWaylandDisplayWL =
-        reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglBindWaylandDisplayWL"));
-    fprintf(stderr, "bindWaylandDisplayWL %p\n", bindWaylandDisplayWL);
-    bindWaylandDisplayWL(eglDisplay, m_display);
-
 }
 
 Instance::~Instance()

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <EGL/eglmesaext.h>
 #include <glib.h>
 #include <unordered_map>
 #include <wayland-server.h>

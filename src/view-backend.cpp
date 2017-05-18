@@ -55,8 +55,9 @@ public:
         return dup(m_clientFd);
     }
 
-    void exportBufferResource(struct wl_resource*) override
+    void exportBufferResource(struct wl_resource* bufferResource) override
     {
+        fprintf(stderr, "exportBufferResource() oooh goodie! %p\n", bufferResource);
     }
 
 private:
