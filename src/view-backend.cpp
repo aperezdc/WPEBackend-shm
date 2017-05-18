@@ -57,7 +57,26 @@ public:
 
     void exportBufferResource(struct wl_resource* bufferResource) override
     {
-        fprintf(stderr, "exportBufferResource() oooh goodie! %p\n", bufferResource);
+        struct wl_shm_buffer* shmBuffer = wl_shm_buffer_get(bufferResource);
+        if (!shmBuffer) {
+            fprintf(stderr, "exportBufferResource(): did not receive a wl_shm buffer\n");
+            return;
+        }
+
+        wl_shm_buffer_begin_access(shmBuffer);
+
+        void* data = wl_shm_buffer_get_data(shmBuffer);
+        int32_t stride = wl_shm_buffer_get_stride(shmBuffer);
+        uint32_t format = wl_shm_buffer_get_format(shmBuffer);
+        int32_t width = wl_shm_buffer_get_width(shmBuffer);
+        int32_t height = wl_shm_buffer_get_height(shmBuffer);
+
+        fprintf(stderr, "exportBufferResource(): received buffer %p, its data %p\n",
+            bufferResource, data);
+        fprintf(stderr, "    stride %d format %u size (%d,%d)\n",
+            stride, format, width, height);
+
+        wl_shm_buffer_end_access(shmBuffer);
     }
 
 private:
