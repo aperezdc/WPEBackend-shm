@@ -5,8 +5,6 @@
 #include <cstdio>
 #include <cstring>
 #include <glib.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 #include <wayland-egl.h>
 
 namespace {
