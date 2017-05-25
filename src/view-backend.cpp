@@ -79,7 +79,8 @@ public:
         fprintf(stderr, "    stride %d format %u size (%d,%d)\n",
             stride, format, width, height);
 
-        if (getenv("DUMP_PNG_ENABLE")) {
+        char* png_image_path = getenv("WPE_DUMP_PNG_PATH");
+        if (png_image_path) {
             char filename[128];
             static int files = 0;
             cairo_surface_t* surface = cairo_image_surface_create_for_data(static_cast<unsigned char*>(data),
@@ -87,11 +88,7 @@ public:
                                                                            width,
                                                                            height,
                                                                            stride);
-            char* png_image_path = getenv("DUMP_PNG_PATH");
-            if (png_image_path)
-                sprintf(filename, "%sdump_%d.png", png_image_path, files++);
-            else
-                sprintf(filename, "/tmp/dump_%d.png", files++);
+            sprintf(filename, "%sdump_%d.png", png_image_path, files++);
             cairo_surface_write_to_png(surface, filename);
             cairo_surface_destroy(surface);
         }
