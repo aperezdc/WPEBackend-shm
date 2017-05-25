@@ -11,6 +11,7 @@ namespace WS {
 struct Surface;
 
 struct ExportableClient {
+    virtual void frameCallback(struct wl_resource*) = 0;
     virtual void exportBufferResource(struct wl_resource*) = 0;
 };
 

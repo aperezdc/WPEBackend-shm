@@ -11,6 +11,7 @@ find_package(WaylandEGL REQUIRED)
 find_package(WPEBackend REQUIRED)
 
 set(WPEBACKEND_SHM_INCLUDE_DIRECTORIES
+    "include"
     ${CAIRO_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
@@ -29,10 +30,15 @@ set(WPEBACKEND_SHM_LIBRARIES
     ${WPEBACKEND_LIBRARIES}
 )
 
+set(WPEBACKEND_SHM_PUBLIC_HEADERS
+    include/wpe-fdo/view-backend-exportable.h
+)
+
 set(WPEBACKEND_SHM_SOURCES
     src/renderer-backend-egl.cpp
     src/renderer-host.cpp
     src/view-backend.cpp
+    src/view-backend-exportable-shm.cpp
     src/shm.cpp
     src/ws.cpp
 )
@@ -44,4 +50,8 @@ target_link_libraries(WPEBackend-shm ${WPEBACKEND_SHM_LIBRARIES})
 install(TARGETS WPEBackend-shm
     EXPORT WPEBackend-shmTargets
     LIBRARY DESTINATION lib
+)
+install(
+    FILES ${WPEBACKEND_SHM_PUBLIC_HEADERS}
+    DESTINATION include/wpe-fdo
 )

@@ -56,6 +56,8 @@ public:
         return dup(m_clientFd);
     }
 
+    void frameCallback(struct wl_resource*) override { }
+
     void exportBufferResource(struct wl_resource* bufferResource) override
     {
         struct wl_shm_buffer* shmBuffer = wl_shm_buffer_get(bufferResource);

@@ -111,7 +111,8 @@ const struct wl_registry_listener Backend::s_registryListener = {
 
 class Target {
 public:
-    Target(int hostFd)
+    Target(struct wpe_renderer_backend_egl_target* target, int hostFd)
+        : m_target(target)
     {
         m_socket = g_socket_new_from_fd(hostFd, nullptr);
         if (m_socket)
@@ -136,15 +137,34 @@ public:
                 nullptr, nullptr);
     }
 
+    void requestFrame()
+    {
+        struct wl_callback* callback = wl_surface_frame(m_surface);
+        wl_callback_add_listener(callback, &s_callbackListener, this);
+    }
+
     struct wl_egl_window* window() const { return m_window; }
 
 private:
+    static const struct wl_callback_listener s_callbackListener;
+
+    struct wpe_renderer_backend_egl_target* m_target { nullptr };
     GSocket* m_socket { nullptr };
 
     struct wl_surface* m_surface { nullptr };
     struct wl_egl_window* m_window { nullptr };
 };
 
+const struct wl_callback_listener Target::s_callbackListener = {
+    // done
+    [](void* data, struct wl_callback* callback, uint32_t time)
+    {
+        auto& target = *reinterpret_cast<Target*>(data);
+        wpe_renderer_backend_egl_target_dispatch_frame_complete(target.m_target);
+
+        wl_callback_destroy(callback);
+    },
+};
 
 class OffscreenTarget {
 public:
@@ -192,9 +212,9 @@ struct wpe_renderer_backend_egl_interface shm_renderer_backend_egl = {
 
 struct wpe_renderer_backend_egl_target_interface shm_renderer_backend_egl_target = {
     // create
-    [](struct wpe_renderer_backend_egl_target*, int host_fd) -> void*
+    [](struct wpe_renderer_backend_egl_target* target, int host_fd) -> void*
     {
-        return new Target(host_fd);
+        return new Target(target, host_fd);
     },
     // destroy
     [](void* data)
@@ -218,14 +238,14 @@ struct wpe_renderer_backend_egl_target_interface shm_renderer_backend_egl_target
     // resize
     [](void*, uint32_t, uint32_t) { },
     // frame_will_render
-    [](void*)
+    [](void* data)
     {
-        fprintf(stderr, "shm_renderer_backend_egl_target::frame_will_render()\n");
+        auto& target = *reinterpret_cast<Target*>(data);
+        target.requestFrame();
     },
     // frame_rendered
     [](void* data)
     {
-        fprintf(stderr, "shm_renderer_backend_egl_target::frame_rendered()\n");
     },
 };
 

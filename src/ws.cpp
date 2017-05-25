@@ -57,7 +57,6 @@ struct Surface {
     ExportableClient* exportableClient { nullptr };
 
     struct wl_resource* bufferResource { nullptr };
-    uint32_t callback; // FIXME: should be a list.
 };
 
 static const struct wl_surface_interface s_surfaceInterface = {
@@ -66,7 +65,6 @@ static const struct wl_surface_interface s_surfaceInterface = {
     // attach
     [](struct wl_client*, struct wl_resource* surfaceResource, struct wl_resource* bufferResource, int32_t, int32_t)
     {
-        fprintf(stderr, "Host::s_surfaceInterface::attach() surfaceResource %p\n", surfaceResource);
         auto& surface = *static_cast<Surface*>(wl_resource_get_user_data(surfaceResource));
 
         if (surface.bufferResource)
@@ -78,13 +76,18 @@ static const struct wl_surface_interface s_surfaceInterface = {
     {
     },
     // frame
-    [](struct wl_client*, struct wl_resource* surfaceResource, uint32_t callback)
+    [](struct wl_client* client, struct wl_resource* surfaceResource, uint32_t callback)
     {
-        fprintf(stderr, "Host::s_surfaceInterface::frame() surfaceResource %p\n", surfaceResource);
         auto& surface = *static_cast<Surface*>(wl_resource_get_user_data(surfaceResource));
 
-        // FIXME: this should be a list.
-        surface.callback = callback;
+        struct wl_resource* callbackResource = wl_resource_create(client, &wl_callback_interface, 1, callback);
+        if (!callbackResource) {
+            wl_resource_post_no_memory(surfaceResource);
+            return;
+        }
+
+        wl_resource_set_implementation(callbackResource, nullptr, nullptr, nullptr);
+        surface.exportableClient->frameCallback(callbackResource);
     },
     // set_opaque_region
     [](struct wl_client*, struct wl_resource*, struct wl_resource*) { },
@@ -93,9 +96,7 @@ static const struct wl_surface_interface s_surfaceInterface = {
     // commit
     [](struct wl_client*, struct wl_resource* surfaceResource)
     {
-        fprintf(stderr, "Host::s_surfaceInterface::commit() %p\n", surfaceResource);
         auto& surface = *static_cast<Surface*>(wl_resource_get_user_data(surfaceResource));
-        fprintf(stderr, "\texportableClient %p\n", surface.exportableClient);
 
         struct wl_resource* bufferResource = surface.bufferResource;
         surface.bufferResource = nullptr;
@@ -115,8 +116,6 @@ static const struct wl_compositor_interface s_compositorInterface = {
     {
         struct wl_resource* surfaceResource = wl_resource_create(client, &wl_surface_interface,
             wl_resource_get_version(resource), id);
-        fprintf(stderr, "Host::s_compositorInterface::create_surface() id %u resource %p\n",
-            id, surfaceResource);
         if (!surfaceResource) {
             wl_resource_post_no_memory(resource);
             return;
