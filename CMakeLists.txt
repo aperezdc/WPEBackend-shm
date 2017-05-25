@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-exceptions -fno-rtti")
 
+find_package(Cairo REQUIRED)
 find_package(EGL REQUIRED)
 find_package(GLIB REQUIRED COMPONENTS gio)
 find_package(Wayland REQUIRED)
@@ -10,6 +11,7 @@ find_package(WaylandEGL REQUIRED)
 find_package(WPEBackend REQUIRED)
 
 set(WPEBACKEND_SHM_INCLUDE_DIRECTORIES
+    ${CAIRO_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ${WAYLAND_INCLUDE_DIRS}
@@ -18,6 +20,7 @@ set(WPEBACKEND_SHM_INCLUDE_DIRECTORIES
 )
 
 set(WPEBACKEND_SHM_LIBRARIES
+    ${CAIRO_LIBRARIES}
     ${EGL_LIBRARIES}
     ${GLIB_GIO_LIBRARIES}
     ${GLIB_LIBRARIES}

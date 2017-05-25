@@ -1,3 +1,5 @@
+#define DUMP_IMAGE_DATA_TO_PNG
+
 #include "interfaces.h"
 
 #include "ws.h"
@@ -5,6 +7,10 @@
 #include <gio/gio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+
+#if defined(DUMP_IMAGE_DATA_TO_PNG)
+#include <cairo.h>
+#endif
 
 namespace {
 
@@ -75,6 +81,23 @@ public:
             bufferResource, data);
         fprintf(stderr, "    stride %d format %u size (%d,%d)\n",
             stride, format, width, height);
+
+#if defined(DUMP_IMAGE_DATA_TO_PNG)
+        char filename[128];
+        static int files = 0;
+        cairo_surface_t* surface = cairo_image_surface_create_for_data(static_cast<unsigned char*>(data),
+                                                                       CAIRO_FORMAT_ARGB32,
+                                                                       width,
+                                                                       height,
+                                                                       stride);
+        char* png_image_path = getenv("DUMP_PNG_PATH");
+        if (png_image_path)
+            sprintf(filename, "%s/dump_%d.png", png_image_path, files++);
+        else
+            sprintf(filename, "/tmp/dump_%d.png", files++);
+        cairo_surface_write_to_png(surface, filename);
+        cairo_surface_destroy(surface);
+#endif
 
         wl_shm_buffer_end_access(shmBuffer);
     }
