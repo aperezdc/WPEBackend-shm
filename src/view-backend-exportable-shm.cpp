@@ -62,7 +62,10 @@ public:
 
     int clientFd()
     {
-        return dup(m_clientFd);
+        auto fd = dup(m_clientFd);
+        if (fd == -1)
+            perror("ViewBackend::clientFd: dup");
+        return fd;
     }
 
     void frameCallback(struct wl_resource* callbackResource) override

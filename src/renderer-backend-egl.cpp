@@ -57,7 +57,8 @@ class Backend {
 public:
     Backend(int hostFd)
     {
-        m_display = wl_display_connect_to_fd(hostFd);
+        if (!(m_display = wl_display_connect_to_fd(hostFd)))
+            perror("Backend::Backend: wl_display_connect_to_fd");
 
         m_source = g_source_new(&Source::s_sourceFuncs, sizeof(Source));
         auto& source = *reinterpret_cast<Source*>(m_source);

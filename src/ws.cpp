@@ -141,7 +141,8 @@ Instance& Instance::singleton()
 Instance::Instance()
 {
 
-    m_display = wl_display_create();
+    if (!(m_display = wl_display_create()))
+        fprintf(stderr, "WS::Instance::Instance: wl_display_create failed\n");
     wl_display_init_shm(m_display);
 
     m_compositor = wl_global_create(m_display, &wl_compositor_interface, 3, this,
@@ -184,8 +185,10 @@ Instance::~Instance()
 int Instance::createClient()
 {
     int pair[2];
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, pair) < 0)
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, pair) < 0) {
+        perror("socketpair");
         return -1;
+    }
 
     int clientFd = dup(pair[1]);
     close(pair[1]);
