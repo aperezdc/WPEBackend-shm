@@ -180,7 +180,7 @@ public:
     void initialize(Backend& backend)
     {
         m_surface = wl_compositor_create_surface(backend.compositor());
-        m_window = wl_egl_window_create(m_surface, 800, 600);
+        m_window = wl_egl_window_create(m_surface, 1, 1);
     }
 
     struct wl_egl_window* window() const { return m_window; }
