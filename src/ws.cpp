@@ -144,6 +144,7 @@ Instance::Instance()
     if (!(m_display = wl_display_create()))
         fprintf(stderr, "WS::Instance::Instance: wl_display_create failed\n");
     wl_display_init_shm(m_display);
+    wl_display_add_shm_format(m_display, WL_SHM_FORMAT_RGB565);
 
     m_compositor = wl_global_create(m_display, &wl_compositor_interface, 3, this,
         [](struct wl_client* client, void*, uint32_t version, uint32_t id)
