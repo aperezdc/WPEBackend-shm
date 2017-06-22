@@ -129,7 +129,7 @@ public:
     void initialize(Backend& backend, uint32_t width, uint32_t height)
     {
         m_surface = wl_compositor_create_surface(backend.compositor());
-        m_window = wl_egl_window_create(m_surface, 800, 600);
+        m_window = wl_egl_window_create(m_surface, width, height);
         wl_display_roundtrip(backend.display());
 
         uint32_t message[] = { 0x42, wl_proxy_get_id(reinterpret_cast<struct wl_proxy*>(m_surface)) };
